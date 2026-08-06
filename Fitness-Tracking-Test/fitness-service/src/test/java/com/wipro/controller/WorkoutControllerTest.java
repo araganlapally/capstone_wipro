@@ -1,0 +1,153 @@
+package com.wipro.controller;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wipro.config.TestSecurityConfig;
+import com.wipro.dto.AIWorkoutResponse;
+import com.wipro.dto.WorkoutPlanRequest;
+import com.wipro.dto.WorkoutPlanResponse;
+import com.wipro.security.JwtFilter;
+import com.wipro.service.WorkoutService;
+
+@WebMvcTest(WorkoutController.class)
+@Import(TestSecurityConfig.class)
+class WorkoutControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private WorkoutService workoutService;
+
+    @MockitoBean
+    private JwtFilter jwtFilter;
+
+    @Test
+    void createWorkoutPlan_ShouldReturnCreated() throws Exception {
+
+        WorkoutPlanRequest request = new WorkoutPlanRequest();
+        request.setUserId(1L);
+        request.setPlanName("Beginner Plan");
+        request.setGoal("Weight Loss");
+        request.setDurationWeeks(8);
+
+        WorkoutPlanResponse response = new WorkoutPlanResponse();
+        response.setId(1L);
+        response.setUserId(1L);
+        response.setPlanName("Beginner Plan");
+        response.setGoal("Weight Loss");
+        response.setDurationWeeks(8);
+
+        when(workoutService.createWorkoutPlan(any()))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/workouts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.planName").value("Beginner Plan"));
+    }
+
+    @Test
+    void getWorkoutPlanById_ShouldReturnWorkout() throws Exception {
+
+        WorkoutPlanResponse response = new WorkoutPlanResponse();
+        response.setId(1L);
+        response.setPlanName("Gym Plan");
+
+        when(workoutService.getWorkoutPlanById(1L))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/workouts/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.planName").value("Gym Plan"));
+    }
+
+    @Test
+    void getWorkoutPlansByUserId_ShouldReturnList() throws Exception {
+
+        WorkoutPlanResponse response = new WorkoutPlanResponse();
+        response.setId(1L);
+        response.setPlanName("Plan A");
+
+        when(workoutService.getWorkoutPlansByUserId(1L))
+                .thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/workouts/user/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].planName").value("Plan A"));
+    }
+
+    @Test
+    void updateWorkoutPlan_ShouldReturnUpdatedWorkout() throws Exception {
+
+        WorkoutPlanRequest request = new WorkoutPlanRequest();
+        request.setUserId(1L);
+        request.setPlanName("Updated Plan");
+        request.setGoal("Muscle Gain");
+        request.setDurationWeeks(12);
+
+        WorkoutPlanResponse response = new WorkoutPlanResponse();
+        response.setId(1L);
+        response.setPlanName("Updated Plan");
+        response.setGoal("Muscle Gain");
+
+        when(workoutService.updateWorkoutPlan(eq(1L), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(put("/api/workouts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.planName").value("Updated Plan"));
+    }
+
+    @Test
+    void deleteWorkoutPlan_ShouldReturnSuccessMessage() throws Exception {
+
+        doNothing().when(workoutService).deleteWorkoutPlan(1L);
+
+        mockMvc.perform(delete("/api/workouts/1"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void generateWorkout_ShouldReturnAIWorkout() throws Exception {
+
+        AIWorkoutResponse response =
+                new AIWorkoutResponse("AI Workout Plan");
+
+        when(workoutService.generateWorkout(1L))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/workouts/generate/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workoutPlan")
+                        .value("AI Workout Plan"));
+    }
+}

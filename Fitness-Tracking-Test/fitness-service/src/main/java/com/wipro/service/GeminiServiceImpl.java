@@ -16,67 +16,68 @@ public class GeminiServiceImpl implements GeminiService {
 
     @Override
     public String generateWorkout(String prompt) {
-    	System.out.println("API Key = " + apiKey);
-    	String url =
-    			"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
-    			+ apiKey;
 
-        RestTemplate restTemplate = new RestTemplate();
-
-        Map<String, Object> requestBody = Map.of(
-                "contents",
-                List.of(
-                        Map.of(
-                                "parts",
-                                List.of(
-                                        Map.of("text", prompt)
-                                )
-                        )
-                )
-        );
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<Object> entity =
-                new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<Map> response =
-        		
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.POST,
-                        entity,
-                        Map.class);
+        String url =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key="
+            + apiKey;
 
         try {
 
-            List<?> candidates =
-                    (List<?>) response.getBody().get("candidates");
+            RestTemplate restTemplate = new RestTemplate();
 
-            Map<?, ?> candidate =
-                    (Map<?, ?>) candidates.get(0);
+            Map<String, Object> part = Map.of(
+                    "text", prompt
+            );
 
-            Map<?, ?> content =
-                    (Map<?, ?>) candidate.get("content");
+            Map<String, Object> content = Map.of(
+                    "parts", List.of(part)
+            );
 
-            List<?> parts =
-                    (List<?>) content.get("parts");
+            Map<String, Object> requestBody = Map.of(
+                    "contents", List.of(content)
+            );
 
-            Map<?, ?> part =
-                    (Map<?, ?>) parts.get(0);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-            return part.get("text").toString();
+            HttpEntity<Map<String, Object>> request =
+                    new HttpEntity<>(requestBody, headers);
+
+
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            request,
+                            Map.class
+                    );
+
+
+            Map responseBody = response.getBody();
+
+            List candidates =
+                    (List) responseBody.get("candidates");
+
+            Map candidate =
+                    (Map) candidates.get(0);
+
+            Map contentMap =
+                    (Map) candidate.get("content");
+
+            List parts =
+                    (List) contentMap.get("parts");
+
+            Map textPart =
+                    (Map) parts.get(0);
+
+
+            return textPart.get("text").toString();
+
 
         } catch (Exception e) {
-            e.printStackTrace();
 
-            return """
-                   AI Workout Generation Failed
-
-                   Reason:
-                   %s
-                   """.formatted(e.getMessage());
+            return "AI Workout Generation Failed: "
+                    + e.getMessage();
         }
     }
 }
