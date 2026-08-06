@@ -16,11 +16,10 @@ public class GeminiServiceImpl implements GeminiService {
 
     @Override
     public String generateWorkout(String prompt) {
-
+    	System.out.println("API Key = " + apiKey);
     	String url =
-    			"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
+    			"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
     			+ apiKey;
-
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -43,6 +42,7 @@ public class GeminiServiceImpl implements GeminiService {
                 new HttpEntity<>(requestBody, headers);
 
         ResponseEntity<Map> response =
+        		
                 restTemplate.exchange(
                         url,
                         HttpMethod.POST,

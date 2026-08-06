@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.wipro.dto.AuthResponse;
 import com.wipro.dto.LoginRequest;
 import com.wipro.dto.RegisterRequest;
+import com.wipro.dto.UserProfileResponse;
 import com.wipro.entity.Role;
 import com.wipro.entity.User;
 import com.wipro.exception.InvalidCredentialsException;
@@ -67,14 +68,11 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest request) {
 
         try {
-
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
                             request.getPassword()));
-
         } catch (Exception e) {
-
             throw new InvalidCredentialsException(
                     "Invalid Email or Password");
         }
@@ -87,9 +85,22 @@ public class AuthServiceImpl implements AuthService {
                 jwtUtil.generateToken(
                         userDetails.getUsername());
 
+        User user = userRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new InvalidCredentialsException(
+                                "User not found"));
+
+        UserProfileResponse userResponse =
+                UserProfileResponse.builder()
+                        .userId(user.getId())
+                        .fullName(user.getFullName())
+                        .email(user.getEmail())
+                        .build();
+
         return AuthResponse.builder()
                 .token(token)
                 .message("Login Successful")
+                .user(userResponse)
                 .build();
-    }
-}
+    }}

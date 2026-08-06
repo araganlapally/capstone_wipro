@@ -1,6 +1,5 @@
 package com.wipro.dto;
 
-
 import lombok.*;
 
 @Getter
@@ -11,6 +10,6 @@ import lombok.*;
 public class AuthResponse {
 
     private String token;
-
     private String message;
+    private UserProfileResponse user;
 }
