@@ -19,6 +19,9 @@ import com.wipro.security.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
+import com.wipro.entity.FitnessProfile;
+import com.wipro.repository.FitnessProfileRepository;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -32,6 +35,8 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     private final CustomUserDetailsService userDetailsService;
+    
+    private final FitnessProfileRepository fitnessProfileRepository;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -52,6 +57,11 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userRepository.save(user);
+        
+        FitnessProfile profile = new FitnessProfile();
+        profile.setUser(user);
+
+        fitnessProfileRepository.save(profile);
 
         String token =
                 jwtUtil.generateToken(
@@ -86,10 +96,16 @@ public class AuthServiceImpl implements AuthService {
         String token =
                 jwtUtil.generateToken(
                         userDetails.getUsername());
+        
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         return AuthResponse.builder()
                 .token(token)
                 .message("Login Successful")
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
                 .build();
     }
 }

@@ -36,12 +36,15 @@ export default function Dashboard() {
     setQuestion("");
 
     try {
-      const res = await fetch("http://localhost:8081/ai/ask", {
+      const res = await fetch("http://localhost:8082/ai/ask", {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain"
+          "Content-Type": "application/json"
         },
-        body: userQuestion
+        body: JSON.stringify({
+        userId: JSON.parse(localStorage.getItem("user")).id,
+        question: userQuestion
+})
       });
 
       const data = await res.json();
