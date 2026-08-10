@@ -29,7 +29,7 @@ class MealPlanServiceImplTest {
 
 
     @Mock
-    private GeminiService geminiService;
+    private AIService aiService;
 
 
 
@@ -58,7 +58,7 @@ class MealPlanServiceImplTest {
         mealPlanService =
                 new MealPlanServiceImpl(
                         userServiceClient,
-                        geminiService,
+                        aiService,
                         objectMapper
                 );
     }
@@ -110,7 +110,7 @@ class MealPlanServiceImplTest {
 
 
 
-        when(geminiService
+        when(aiService
                 .generateWorkout(
                         org.mockito.ArgumentMatchers.anyString()
                 ))
