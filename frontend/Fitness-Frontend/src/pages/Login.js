@@ -18,6 +18,7 @@ export default function Login() {
       });
 
       const data = await res.json();
+      console.log("LOGIN RESPONSE:", JSON.stringify(data));
 
       const token = data.token || data.jwt;
       if (!token) throw new Error("No token");

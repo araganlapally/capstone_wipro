@@ -9,7 +9,11 @@ import lombok.*;
 @Builder
 public class AuthResponse {
 
-    private String token;
-    private String message;
-    private UserProfileResponse user;
+	private String token;
+
+	private String message;
+
+	private Long id;
+	private String fullName;
+	private String email;
 }

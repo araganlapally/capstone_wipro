@@ -36,7 +36,8 @@ public class SecurityConfig {
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
                             "/api/workouts/generate/**",
-                            "/api/meals/generate/**"
+                            "/api/meals/generate/**",
+                            "/ai/**"
                     )
                     .permitAll()
                     .anyRequest()
