@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class MealPlanServiceImpl implements MealPlanService {
 
     private final UserServiceClient userServiceClient;
-    private final AIService geminiService;
+    private final AIService aiService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -21,6 +21,7 @@ public class MealPlanServiceImpl implements MealPlanService {
 
         try {
 
+            // Get user profile from User Service
             UserProfileResponse profile =
                     userServiceClient.getProfile(userId);
 
@@ -59,28 +60,28 @@ public class MealPlanServiceImpl implements MealPlanService {
                     Return ONLY valid JSON.
 
                     {
-                      "dailyCalories":0,
-                      "dailyProtein":0,
-                      "dailyCarbs":0,
-                      "dailyFats":0,
-                      "vegetarianFoods":[
+                      "dailyCalories": 0,
+                      "dailyProtein": 0,
+                      "dailyCarbs": 0,
+                      "dailyFats": 0,
+                      "vegetarianFoods": [
                         {
-                          "food":"",
-                          "quantity":"",
-                          "calories":0,
-                          "protein":0,
-                          "carbs":0,
-                          "fats":0
+                          "food": "",
+                          "quantity": "",
+                          "calories": 0,
+                          "protein": 0,
+                          "carbs": 0,
+                          "fats": 0
                         }
                       ],
-                      "nonVegetarianFoods":[
+                      "nonVegetarianFoods": [
                         {
-                          "food":"",
-                          "quantity":"",
-                          "calories":0,
-                          "protein":0,
-                          "carbs":0,
-                          "fats":0
+                          "food": "",
+                          "quantity": "",
+                          "calories": 0,
+                          "protein": 0,
+                          "carbs": 0,
+                          "fats": 0
                         }
                       ]
                     }
@@ -93,9 +94,14 @@ public class MealPlanServiceImpl implements MealPlanService {
                     profile.getGender(),
                     profile.getGoal());
 
+            // Call AI Service for nutrition recommendation
             String aiResponse =
-                    geminiService.generateWorkout(prompt);
+                    aiService.generateNutritionRecommendation(
+                            userId,
+                            prompt
+                    );
 
+            // Remove Markdown code fences if AI returns them
             aiResponse = aiResponse
                     .replace("```json", "")
                     .replace("```", "")
@@ -105,9 +111,11 @@ public class MealPlanServiceImpl implements MealPlanService {
             System.out.println(aiResponse);
             System.out.println("===================================");
 
+            // Convert AI JSON response into DTO
             return objectMapper.readValue(
                     aiResponse,
-                    NutritionRecommendationResponse.class);
+                    NutritionRecommendationResponse.class
+            );
 
         } catch (Exception e) {
 
@@ -115,7 +123,8 @@ public class MealPlanServiceImpl implements MealPlanService {
 
             throw new RuntimeException(
                     "Failed to generate AI nutrition recommendation",
-                    e);
+                    e
+            );
         }
     }
 }

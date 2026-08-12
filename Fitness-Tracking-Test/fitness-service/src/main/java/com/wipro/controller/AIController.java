@@ -7,55 +7,69 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wipro.dto.AIChatRequest;
+import com.wipro.dto.AIServiceRequest;
+import com.wipro.dto.AIWorkoutResponse;
 import com.wipro.dto.UserProfileResponse;
 import com.wipro.service.AIService;
 import com.wipro.service.UserServiceClient;
 
 import lombok.RequiredArgsConstructor;
 
-
-
 @RestController
 @RequiredArgsConstructor
 public class AIController {
 
-	
-	private final AIService aiService;
-	private final UserServiceClient userServiceClient;
-	
-	@PostMapping("/ai/ask")
-	public Map<String, String> ask(@RequestBody AIChatRequest request) {
+    private final AIService aiService;
+    private final UserServiceClient userServiceClient;
 
-		System.out.println("QUESTION RECEIVED = " + request.getQuestion());
-		
-		UserProfileResponse profile = userServiceClient.getProfile(request.getUserId());
-		
-		String prompt = String.format(
-			    """
-			    You are a professional fitness coach.
+    @PostMapping("/ai/ask")
+    public Map<String, String> ask(
+            @RequestBody AIChatRequest request) {
 
-			    User Profile:
-			    Age: %d
-			    Height: %.1f cm
-			    Weight: %.1f kg
-			    Gender: %s
-			    Goal: %s
+        System.out.println(
+                "QUESTION RECEIVED = "
+                        + request.getQuestion());
 
-			    User Question:
-			    %s
+        UserProfileResponse profile =
+                userServiceClient.getProfile(
+                        request.getUserId());
 
-			    Give a personalized fitness response based on the user's profile and goal.
-			    """,
-			    profile.getAge(),
-			    profile.getHeight(),
-			    profile.getWeight(),
-			    profile.getGender(),
-			    profile.getGoal(),
-			    request.getQuestion()
-			);
+        String prompt = String.format("""
+                You are a professional fitness coach.
 
-			String answer = aiService.generateWorkout(prompt);
+                User Profile:
 
-	    return Map.of("answer", answer);
-	}
+                Age: %d
+                Height: %.1f cm
+                Weight: %.1f kg
+                Gender: %s
+                Goal: %s
+
+                User Question:
+
+                %s
+
+                Give a personalized fitness response
+                based on the user's profile and goal.
+                """,
+                profile.getAge(),
+                profile.getHeight(),
+                profile.getWeight(),
+                profile.getGender(),
+                profile.getGoal(),
+                request.getQuestion());
+
+        AIServiceRequest aiRequest =
+                new AIServiceRequest(
+                        request.getUserId(),
+                        prompt,
+                        "CHAT");
+
+        AIWorkoutResponse response =
+                aiService.generateWorkout(aiRequest);
+
+        return Map.of(
+                "answer",
+                response.getWorkoutPlan());
+    }
 }

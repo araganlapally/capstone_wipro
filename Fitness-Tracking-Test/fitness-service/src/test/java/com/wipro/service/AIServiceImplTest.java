@@ -1,92 +1,98 @@
 package com.wipro.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@SpringBootTest
+import com.wipro.dto.AIServiceRequest;
+import com.wipro.dto.AIWorkoutResponse;
+
 class AIServiceImplTest {
 
-    @Autowired
-    private AIService aiService;
+    @Mock
+    private AIServiceClient aiServiceClient;
 
-    @MockBean
-    private RestTemplate restTemplate;
+    @InjectMocks
+    private AIServiceImpl aiService;
 
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
     @Test
-    void generateWorkout_shouldReturnResponse() {
+    void generateWorkout_ShouldReturnAIWorkoutResponse() {
 
         // Arrange
-        String prompt = "Create a workout plan for weight loss.";
+        AIServiceRequest request =
+                new AIServiceRequest(
+                        1L,
+                        "Create a workout plan for weight loss",
+                        "WORKOUT"
+                );
 
-        Map<String, Object> responseBody = Map.of(
-                "response",
-                "Follow a calorie deficit and exercise regularly."
-        );
+        AIWorkoutResponse expectedResponse =
+                new AIWorkoutResponse(
+                        "7-day workout plan for weight loss"
+                );
 
-        ResponseEntity<Map> response =
-                ResponseEntity.ok(responseBody);
-
-        when(restTemplate.exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
-        )).thenReturn(response);
+        when(aiServiceClient.generateWorkout(request))
+                .thenReturn(expectedResponse);
 
         // Act
-        String result =
-                aiService.generateWorkout(prompt);
+        AIWorkoutResponse actualResponse =
+                aiService.generateWorkout(request);
+
+        // Assert
+        assertNotNull(actualResponse);
+
+        assertEquals(
+                "7-day workout plan for weight loss",
+                actualResponse.getWorkoutPlan()
+        );
+
+        // Verify AI Service Client was called
+        verify(aiServiceClient)
+                .generateWorkout(request);
+    }
+
+    @Test
+    void generateWorkout_ShouldReturnSameResponseFromClient() {
+
+        // Arrange
+        AIServiceRequest request =
+                new AIServiceRequest(
+                        1L,
+                        "Create workout plan",
+                        "WORKOUT"
+                );
+
+        AIWorkoutResponse expectedResponse =
+                new AIWorkoutResponse(
+                        "AI generated workout"
+                );
+
+        when(aiServiceClient.generateWorkout(request))
+                .thenReturn(expectedResponse);
+
+        // Act
+        AIWorkoutResponse result =
+                aiService.generateWorkout(request);
 
         // Assert
         assertEquals(
-                "Follow a calorie deficit and exercise regularly.",
+                expectedResponse,
                 result
         );
 
-        verify(restTemplate).exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
-        );
-    }
-
-
-    @Test
-    void generateWorkout_whenRestTemplateFails_shouldThrowException() {
-
-        // Arrange
-        when(restTemplate.exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
-        )).thenThrow(
-                new RuntimeException("Connection refused")
-        );
-
-        // Act + Assert
-        assertThrows(
-                RuntimeException.class,
-                () -> aiService.generateWorkout(
-                        "Create a workout plan"
-                )
-        );
+        verify(aiServiceClient)
+                .generateWorkout(request);
     }
 }
