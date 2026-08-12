@@ -23,4 +23,9 @@ public class MealPlan {
     private Integer carbs;
 
     private Integer fats;
+    
+    private String goal;
+    
+    @Column(columnDefinition = "LONGTEXT")
+    private String nutritionJson;
 }

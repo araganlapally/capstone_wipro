@@ -19,4 +19,7 @@ public class WorkoutPlan {
     private String goal;
 
     private Integer durationWeeks;
+    
+    @Column(columnDefinition = "LONGTEXT")
+    private String workoutJson;
 }

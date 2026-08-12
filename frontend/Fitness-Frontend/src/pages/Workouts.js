@@ -12,22 +12,24 @@ export default function Workouts() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
+      console.log("USER =", user);
+
       const response = await fetch(
         `http://localhost:8082/api/workouts/generate/${user.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+        
       );
 
       const data = await response.json();
 
+      console.log(data.workoutPlan);
+
       const workoutJson = JSON.parse(data.workoutPlan);
+
+      console.log("WORKOUT JSON =", workoutJson);
 
       setDays(workoutJson.days || []);
     } catch (error) {
-      console.error(error);
+      console.error("WORKOUT ERROR =", error);
     } finally {
       setLoading(false);
     }
@@ -57,6 +59,8 @@ export default function Workouts() {
       </div>
     );
   }
+
+  console.log("DAYS =", days);
 
   return (
     <div

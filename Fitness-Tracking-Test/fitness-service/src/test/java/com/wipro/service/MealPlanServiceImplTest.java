@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wipro.dto.NutritionRecommendationResponse;
 import com.wipro.dto.UserProfileResponse;
 
+import com.wipro.repository.MealPlanRepository;
+
 
 
 class MealPlanServiceImplTest {
@@ -38,6 +40,10 @@ class MealPlanServiceImplTest {
 
 
     private ObjectMapper objectMapper;
+    
+    
+    @Mock
+    private MealPlanRepository mealPlanRepository;
 
 
 
@@ -59,7 +65,8 @@ class MealPlanServiceImplTest {
                 new MealPlanServiceImpl(
                         userServiceClient,
                         geminiService,
-                        objectMapper
+                        objectMapper,
+                        mealPlanRepository
                 );
     }
 
