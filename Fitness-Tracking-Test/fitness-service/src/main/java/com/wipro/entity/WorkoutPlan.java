@@ -12,11 +12,15 @@ public class WorkoutPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "plan_name", nullable = false)
     private String planName;
 
+    @Column(name = "goal", nullable = false)
     private String goal;
 
+    @Column(name = "duration_weeks", nullable = false)
     private Integer durationWeeks;
 }

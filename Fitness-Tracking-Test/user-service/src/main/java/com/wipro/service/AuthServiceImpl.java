@@ -10,7 +10,6 @@ import com.wipro.dto.AuthResponse;
 import com.wipro.dto.LoginRequest;
 import com.wipro.dto.RegisterRequest;
 import com.wipro.dto.UserProfileResponse;
-import com.wipro.entity.Role;
 import com.wipro.entity.User;
 import com.wipro.exception.InvalidCredentialsException;
 import com.wipro.exception.UserAlreadyExistsException;
@@ -54,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(
                         passwordEncoder.encode(
                                 request.getPassword()))
-                .role(Role.USER)
+                .role("USER")
                 .build();
 
         userRepository.save(user);

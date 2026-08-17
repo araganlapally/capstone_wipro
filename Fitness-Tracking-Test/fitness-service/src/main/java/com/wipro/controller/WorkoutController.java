@@ -4,13 +4,22 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.wipro.dto.AIWorkoutResponse;
 import com.wipro.dto.WorkoutPlanRequest;
 import com.wipro.dto.WorkoutPlanResponse;
 import com.wipro.service.WorkoutService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,7 +32,7 @@ public class WorkoutController {
 
     @PostMapping
     public ResponseEntity<WorkoutPlanResponse> createWorkoutPlan(
-            @RequestBody WorkoutPlanRequest request) {
+            @Valid @RequestBody WorkoutPlanRequest request) {
 
         return new ResponseEntity<>(
                 workoutService.createWorkoutPlan(request),
@@ -51,7 +60,7 @@ public class WorkoutController {
     public ResponseEntity<WorkoutPlanResponse>
             updateWorkoutPlan(
                     @PathVariable Long id,
-                    @RequestBody WorkoutPlanRequest request) {
+                    @Valid @RequestBody WorkoutPlanRequest request) {
 
         return ResponseEntity.ok(
                 workoutService.updateWorkoutPlan(

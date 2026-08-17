@@ -1,45 +1,25 @@
 package com.wipro.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AIServiceRequest {
 
+    @NotNull(message = "User ID is required")
     private Long userId;
+
+    @NotBlank(message = "Prompt is required")
+    @Size(max = 5000, message = "Prompt must not exceed 5000 characters")
     private String prompt;
+
+    @NotBlank(message = "Request type is required")
     private String requestType;
-
-    public AIServiceRequest() {
-    }
-
-    public AIServiceRequest(
-            Long userId,
-            String prompt,
-            String requestType) {
-
-        this.userId = userId;
-        this.prompt = prompt;
-        this.requestType = requestType;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getPrompt() {
-        return prompt;
-    }
-
-    public void setPrompt(String prompt) {
-        this.prompt = prompt;
-    }
-
-    public String getRequestType() {
-        return requestType;
-    }
-
-    public void setRequestType(String requestType) {
-        this.requestType = requestType;
-    }
 }

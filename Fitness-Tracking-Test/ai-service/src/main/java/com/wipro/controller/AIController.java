@@ -10,6 +10,7 @@ import com.wipro.dto.AIServiceRequest;
 import com.wipro.dto.AIServiceResponse;
 import com.wipro.service.AIService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -21,7 +22,7 @@ public class AIController {
 
     @PostMapping("/workout")
     public ResponseEntity<AIServiceResponse> generateWorkout(
-            @RequestBody AIServiceRequest request) {
+            @Valid @RequestBody AIServiceRequest request) {
 
         String response =
                 aiService.generateResponse(
@@ -33,7 +34,7 @@ public class AIController {
 
     @PostMapping("/nutrition")
     public ResponseEntity<AIServiceResponse> generateNutrition(
-            @RequestBody AIServiceRequest request) {
+            @Valid @RequestBody AIServiceRequest request) {
 
         String response =
                 aiService.generateResponse(
@@ -45,7 +46,7 @@ public class AIController {
 
     @PostMapping("/chat")
     public ResponseEntity<AIServiceResponse> chat(
-            @RequestBody AIServiceRequest request) {
+            @Valid @RequestBody AIServiceRequest request) {
 
         String response =
                 aiService.generateResponse(
