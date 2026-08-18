@@ -1,9 +1,8 @@
 package com.wipro.service;
 
-
-
 import org.springframework.stereotype.Service;
 
+import com.wipro.dto.UserProfileRequest;
 import com.wipro.entity.FitnessProfile;
 import com.wipro.exception.UserNotFoundException;
 import com.wipro.repository.FitnessProfileRepository;
@@ -29,7 +28,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public FitnessProfile updateProfile(
             Long userId,
-            FitnessProfile profile) {
+            UserProfileRequest request) {
 
         FitnessProfile existingProfile =
                 profileRepository
@@ -38,11 +37,11 @@ public class UserServiceImpl implements UserService {
                                 new UserNotFoundException(
                                         "Profile not found"));
 
-        existingProfile.setAge(profile.getAge());
-        existingProfile.setHeight(profile.getHeight());
-        existingProfile.setWeight(profile.getWeight());
-        existingProfile.setGoal(profile.getGoal());
-        existingProfile.setGender(profile.getGender());
+        existingProfile.setAge(request.getAge());
+        existingProfile.setHeight(request.getHeight());
+        existingProfile.setWeight(request.getWeight());
+        existingProfile.setGoal(request.getGoal());
+        existingProfile.setGender(request.getGender());
 
         return profileRepository.save(existingProfile);
     }

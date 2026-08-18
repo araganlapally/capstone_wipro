@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.wipro.dto.UserProfileRequest;
 import com.wipro.entity.FitnessProfile;
 import com.wipro.service.UserService;
 
@@ -34,11 +35,11 @@ public class UserController {
     @PutMapping("/{userId}/profile")
     public ResponseEntity<FitnessProfile> updateProfile(
             @PathVariable Long userId,
-            @Valid @RequestBody FitnessProfile profile) {
+            @Valid @RequestBody UserProfileRequest request) {
 
         return ResponseEntity.ok(
                 userService.updateProfile(
                         userId,
-                        profile));
+                        request));
     }
 }

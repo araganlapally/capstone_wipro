@@ -1,69 +1,134 @@
 package com.wipro.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wipro.entity.FitnessProfile;
-import com.wipro.service.UserService;
-import com.wipro.security.JwtFilter;
-import com.wipro.security.JwtUtil;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
-@AutoConfigureMockMvc(addFilters = false)
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.wipro.dto.UserProfileRequest;
+import com.wipro.entity.FitnessProfile;
+import com.wipro.service.UserService;
+
+@ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private UserService userService;
-
-    @MockBean
-    private JwtFilter jwtFilter;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    void testGetProfile() throws Exception {
+    @Mock
+    private UserService userService;
 
-        FitnessProfile profile = new FitnessProfile();
+    @InjectMocks
+    private UserController userController;
+
+    @BeforeEach
+    void setUp() {
+
+        objectMapper = new ObjectMapper();
+
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(userController)
+                .setValidator(new LocalValidatorFactoryBean())
+                .build();
+    }
+
+    @Test
+    void getProfile_ShouldReturnOk() throws Exception {
+
+        FitnessProfile profile =
+                FitnessProfile.builder()
+                        .id(1L)
+                        .age(25)
+                        .height(175.0)
+                        .weight(70.0)
+                        .goal("WEIGHT_LOSS")
+                        .gender("MALE")
+                        .build();
 
         when(userService.getProfile(1L))
                 .thenReturn(profile);
 
-        mockMvc.perform(get("/api/users/1/profile"))
+        mockMvc.perform(
+                get("/api/users/1/profile"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void testUpdateProfile() throws Exception {
+    void updateProfile_ShouldReturnOk()
+            throws Exception {
 
-        FitnessProfile profile = new FitnessProfile();
+        UserProfileRequest request =
+                new UserProfileRequest();
 
-        when(userService.updateProfile(any(Long.class),
-                any(FitnessProfile.class)))
+        request.setAge(25);
+        request.setHeight(175.0);
+        request.setWeight(70.0);
+        request.setGoal("MUSCLE_GAIN");
+        request.setGender("MALE");
+
+        FitnessProfile profile =
+                FitnessProfile.builder()
+                        .id(1L)
+                        .age(25)
+                        .height(175.0)
+                        .weight(70.0)
+                        .goal("MUSCLE_GAIN")
+                        .gender("MALE")
+                        .build();
+
+        when(userService.updateProfile(
+                eq(1L),
+                any(UserProfileRequest.class)))
                 .thenReturn(profile);
 
-        mockMvc.perform(put("/api/users/1/profile")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(profile)))
+        mockMvc.perform(
+                put("/api/users/1/profile")
+                        .contentType(
+                                MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        request)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void updateProfile_ShouldReturnBadRequest_WhenProfileIsInvalid()
+            throws Exception {
+
+        UserProfileRequest request =
+                new UserProfileRequest();
+
+        request.setAge(null);
+        request.setHeight(null);
+        request.setWeight(null);
+        request.setGoal("");
+        request.setGender("");
+
+        mockMvc.perform(
+                put("/api/users/1/profile")
+                        .contentType(
+                                MediaType.APPLICATION_JSON)
+                        .content(
+                                objectMapper.writeValueAsString(
+                                        request)))
+                .andExpect(status().isBadRequest());
     }
 }

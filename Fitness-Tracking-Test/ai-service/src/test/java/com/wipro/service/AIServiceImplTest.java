@@ -3,7 +3,6 @@ package com.wipro.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,10 +18,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+
+import com.wipro.dto.AIServiceRequest;
+import com.wipro.entity.AIHistory;
+import com.wipro.repository.AIHistoryRepository;
 
 @ExtendWith(MockitoExtension.class)
 class AIServiceImplTest {
@@ -30,8 +34,12 @@ class AIServiceImplTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private AIHistoryRepository aiHistoryRepository;
+
     @InjectMocks
     private AIServiceImpl aiService;
+
 
     @BeforeEach
     void setUp() {
@@ -47,121 +55,170 @@ class AIServiceImplTest {
                 "llama3");
     }
 
-    @Test
-    void generateResponse_shouldReturnAIResponse() {
 
-        // Arrange
-        String prompt =
-                "Create a workout plan for weight loss.";
+    @Test
+    void generateResponse_shouldReturnAIResponse()
+            throws Exception {
+
+        AIServiceRequest request =
+                new AIServiceRequest();
+
+        request.setUserId(1L);
+        request.setPrompt(
+                "Create a workout plan.");
+        request.setRequestType(
+                "WORKOUT");
+
 
         Map<String, Object> responseBody =
                 Map.of(
                         "response",
-                        "Follow a calorie deficit and exercise regularly.");
+                        "Monday: Chest and Triceps");
 
-        ResponseEntity<Map> response =
-                ResponseEntity.ok(responseBody);
+
+        ResponseEntity<Map> responseEntity =
+                new ResponseEntity<>(
+                        responseBody,
+                        HttpStatus.OK);
+
 
         when(restTemplate.exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
+                any(String.class),
+                any(org.springframework.http.HttpMethod.class),
                 any(HttpEntity.class),
-                eq(Map.class)))
-                .thenReturn(response);
+                any(Class.class)))
+                .thenReturn(responseEntity);
 
-        // Act
+
         String result =
-                aiService.generateResponse(prompt);
+                aiService.generateResponse(request);
 
-        // Assert
+
         assertEquals(
-                "Follow a calorie deficit and exercise regularly.",
+                "Monday: Chest and Triceps",
                 result);
 
-        verify(restTemplate).exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class));
+
+        verify(aiHistoryRepository)
+                .save(any(AIHistory.class));
     }
 
-    @Test
-    void generateResponse_whenResponseBodyIsNull_shouldThrowException() {
 
-        // Arrange
-        ResponseEntity<Map> response =
-                ResponseEntity.ok(null);
+    @Test
+    void generateResponse_shouldSaveCorrectHistory()
+            throws Exception {
+
+        AIServiceRequest request =
+                new AIServiceRequest();
+
+        request.setUserId(10L);
+        request.setPrompt(
+                "Give me a nutrition plan.");
+        request.setRequestType(
+                "NUTRITION");
+
+
+        Map<String, Object> responseBody =
+                Map.of(
+                        "response",
+                        "2200 calories per day");
+
+
+        ResponseEntity<Map> responseEntity =
+                ResponseEntity.ok(responseBody);
+
 
         when(restTemplate.exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
+                any(String.class),
+                any(org.springframework.http.HttpMethod.class),
                 any(HttpEntity.class),
-                eq(Map.class)))
-                .thenReturn(response);
+                any(Class.class)))
+                .thenReturn(responseEntity);
 
-        // Act + Assert
-        RuntimeException exception =
-                assertThrows(
-                        RuntimeException.class,
-                        () -> aiService.generateResponse(
-                                "Generate workout"));
 
-        assertEquals(
-                "Invalid response received from AI model",
-                exception.getMessage());
+        aiService.generateResponse(request);
+
+
+        verify(aiHistoryRepository)
+                .save(any(AIHistory.class));
     }
 
-    @Test
-    void generateResponse_whenResponseFieldMissing_shouldThrowException() {
 
-        // Arrange
+    @Test
+    void generateResponse_shouldThrowException_whenAIResponseIsMissing()
+            throws Exception {
+
+        AIServiceRequest request =
+                new AIServiceRequest();
+
+        request.setUserId(1L);
+        request.setPrompt(
+                "Create workout.");
+        request.setRequestType(
+                "WORKOUT");
+
+
         Map<String, Object> responseBody =
                 Map.of();
 
-        ResponseEntity<Map> response =
+
+        ResponseEntity<Map> responseEntity =
                 ResponseEntity.ok(responseBody);
 
+
         when(restTemplate.exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
+                any(String.class),
+                any(org.springframework.http.HttpMethod.class),
                 any(HttpEntity.class),
-                eq(Map.class)))
-                .thenReturn(response);
+                any(Class.class)))
+                .thenReturn(responseEntity);
 
-        // Act + Assert
-        RuntimeException exception =
-                assertThrows(
-                        RuntimeException.class,
-                        () -> aiService.generateResponse(
-                                "Generate nutrition plan"));
 
-        assertEquals(
-                "Invalid response received from AI model",
-                exception.getMessage());
+        assertThrows(
+                RuntimeException.class,
+                () -> aiService.generateResponse(request));
     }
 
+
     @Test
-    void generateResponse_whenRestTemplateFails_shouldThrowException() {
+    void generateResponse_shouldNotSaveHistory_whenAIResponseIsInvalid()
+            throws Exception {
 
-        // Arrange
+        AIServiceRequest request =
+                new AIServiceRequest();
+
+        request.setUserId(1L);
+        request.setPrompt(
+                "Create workout.");
+        request.setRequestType(
+                "WORKOUT");
+
+
+        Map<String, Object> responseBody =
+                Map.of();
+
+
+        ResponseEntity<Map> responseEntity =
+                ResponseEntity.ok(responseBody);
+
+
         when(restTemplate.exchange(
-                eq("http://localhost:11434/api/generate"),
-                eq(HttpMethod.POST),
+                any(String.class),
+                any(org.springframework.http.HttpMethod.class),
                 any(HttpEntity.class),
-                eq(Map.class)))
-                .thenThrow(
-                        new RuntimeException(
-                                "Connection refused"));
+                any(Class.class)))
+                .thenReturn(responseEntity);
 
-        // Act + Assert
-        RuntimeException exception =
-                assertThrows(
-                        RuntimeException.class,
-                        () -> aiService.generateResponse(
-                                "Generate workout"));
 
-        assertEquals(
-                "Connection refused",
-                exception.getMessage());
+        assertThrows(
+                RuntimeException.class,
+                () -> aiService.generateResponse(request));
+
+
+        // History must NOT be saved
+        org.mockito.Mockito.verify(
+                aiHistoryRepository,
+                org.mockito.Mockito.never())
+                .save(any(AIHistory.class));
     }
 }

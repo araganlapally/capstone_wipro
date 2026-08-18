@@ -1,81 +1,126 @@
 package com.wipro.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wipro.dto.AuthResponse;
-import com.wipro.dto.LoginRequest;
-import com.wipro.security.JwtFilter;
-import com.wipro.security.JwtUtil;
-import com.wipro.service.AuthService;
-import com.wipro.dto.RegisterRequest;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AuthController.class)
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wipro.dto.AuthResponse;
+import com.wipro.dto.LoginRequest;
+import com.wipro.dto.RegisterRequest;
+import com.wipro.service.AuthService;
+
+@SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private AuthService authService;
-
-    @MockBean
-    private JwtFilter jwtFilter;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    void testLogin() throws Exception {
+    @Mock
+    private AuthService authService;
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("test@gmail.com");
-        request.setPassword("password");
+    @InjectMocks
+    private AuthController authController;
 
-        AuthResponse response = new AuthResponse();
-        response.setToken("jwt-token");
+    @BeforeEach
+    void setUp() {
 
-        when(authService.login(any(LoginRequest.class)))
-                .thenReturn(response);
+        objectMapper = new ObjectMapper();
 
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(authController)
+                .setValidator(new LocalValidatorFactoryBean())
+                .build();
     }
+
     @Test
-    void testRegister() throws Exception {
+    void register_ShouldReturnCreated() throws Exception {
 
         RegisterRequest request = new RegisterRequest();
-        request.setFullName("badri vishal");
-        request.setEmail("badri@gmail.com");
-        request.setPassword("badri123");
+
+        request.setFullName("John Doe");
+        request.setEmail("john.doe@example.com");
+        request.setPassword("password123");
 
         AuthResponse response = new AuthResponse();
-        response.setToken("jwt-token");
 
         when(authService.register(any(RegisterRequest.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
     }
-    
+
+    @Test
+    void login_ShouldReturnOk() throws Exception {
+
+        LoginRequest request = new LoginRequest();
+
+        request.setEmail("john.doe@example.com");
+        request.setPassword("password123");
+
+        AuthResponse response = new AuthResponse();
+
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(
+                post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void register_ShouldReturnBadRequest_WhenRequestIsInvalid()
+            throws Exception {
+
+        RegisterRequest request = new RegisterRequest();
+
+        request.setFullName("");
+        request.setEmail("invalid-email");
+        request.setPassword("123");
+
+        mockMvc.perform(
+                post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void login_ShouldReturnBadRequest_WhenRequestIsInvalid()
+            throws Exception {
+
+        LoginRequest request = new LoginRequest();
+
+        request.setEmail("");
+        request.setPassword("");
+
+        mockMvc.perform(
+                post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -1,6 +1,8 @@
 package com.wipro.service;
 
+import com.wipro.dto.AIServiceRequest;
+
 public interface AIService {
 
-    String generateResponse(String prompt);
+    String generateResponse(AIServiceRequest request);
 }
