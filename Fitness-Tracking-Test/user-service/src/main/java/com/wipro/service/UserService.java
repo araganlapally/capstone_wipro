@@ -1,5 +1,6 @@
 package com.wipro.service;
 
+import com.wipro.dto.UserProfileRequest;
 import com.wipro.entity.FitnessProfile;
 
 public interface UserService {
@@ -8,5 +9,5 @@ public interface UserService {
 
     FitnessProfile updateProfile(
             Long userId,
-            FitnessProfile profile);
+            UserProfileRequest request);
 }

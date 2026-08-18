@@ -10,18 +10,16 @@ import com.wipro.dto.UserResponse;
 
 @FeignClient(
         name = "user-service",
-        url = "http://localhost:8081",
+        url = "${user.service.url}",
         configuration = FeignConfig.class
 )
 public interface UserServiceClient {
 
     @GetMapping("/api/users/{id}")
     UserResponse getUserById(
-            @PathVariable("id")
-            Long id);
+            @PathVariable("id") Long id);
 
     @GetMapping("/api/users/{userId}/profile")
     UserProfileResponse getProfile(
-            @PathVariable("userId")
-            Long userId);
+            @PathVariable("userId") Long userId);
 }

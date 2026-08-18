@@ -2,12 +2,13 @@ package com.wipro.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import com.wipro.dto.AIWorkoutResponse;
-import com.wipro.dto.UserProfileResponse;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import com.wipro.dto.AIServiceRequest;
+import com.wipro.dto.AIWorkoutResponse;
+import com.wipro.dto.UserProfileResponse;
 import com.wipro.dto.UserResponse;
 import com.wipro.dto.WorkoutPlanRequest;
 import com.wipro.dto.WorkoutPlanResponse;
@@ -24,7 +25,7 @@ public class WorkoutServiceImpl implements WorkoutService {
     private final WorkoutPlanRepository workoutPlanRepository;
     private final ModelMapper modelMapper;
     private final UserServiceClient userServiceClient;
-    private final AIService geminiService;
+    private final AIService aiService;
 
     @Override
     public WorkoutPlanResponse createWorkoutPlan(
@@ -60,10 +61,10 @@ public class WorkoutServiceImpl implements WorkoutService {
 
         WorkoutPlan workoutPlan =
                 workoutPlanRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Workout Plan not found with id : "
-                                        + id));
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Workout Plan not found with id : "
+                                                + id));
 
         return modelMapper.map(
                 workoutPlan,
@@ -72,7 +73,7 @@ public class WorkoutServiceImpl implements WorkoutService {
 
     @Override
     public List<WorkoutPlanResponse>
-            getWorkoutPlansByUserId(Long userId) {
+    getWorkoutPlansByUserId(Long userId) {
 
         return workoutPlanRepository
                 .findByUserId(userId)
@@ -83,7 +84,7 @@ public class WorkoutServiceImpl implements WorkoutService {
                                 WorkoutPlanResponse.class))
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public WorkoutPlanResponse updateWorkoutPlan(
             Long id,
@@ -91,10 +92,10 @@ public class WorkoutServiceImpl implements WorkoutService {
 
         WorkoutPlan workoutPlan =
                 workoutPlanRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Workout Plan not found with id : "
-                                        + id));
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Workout Plan not found with id : "
+                                                + id));
 
         workoutPlan.setUserId(
                 request.getUserId());
@@ -122,65 +123,75 @@ public class WorkoutServiceImpl implements WorkoutService {
 
         WorkoutPlan workoutPlan =
                 workoutPlanRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Workout Plan not found with id : "
-                                        + id));
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Workout Plan not found with id : "
+                                                + id));
 
         workoutPlanRepository.delete(workoutPlan);
     }
-    @Override
-    public AIWorkoutResponse generateWorkout(Long userId) {
 
+    @Override
+    public AIWorkoutResponse generateWorkout(
+            Long userId) {
+
+        // 1. Get user profile
         UserProfileResponse profile =
                 userServiceClient.getProfile(userId);
 
+        // 2. Create AI prompt
         String prompt = String.format("""
-        		Generate a personalized 7-day workout plan.
+                Generate a personalized 7-day workout plan.
 
-        		Age: %d
-        		Height: %.1f cm
-        		Weight: %.1f kg
-        		Gender: %s
-        		Goal: %s
+                User Profile:
 
-        		Return ONLY valid JSON.
+                Age: %d
+                Height: %.1f cm
+                Weight: %.1f kg
+                Gender: %s
+                Goal: %s
 
-        		Format:
+                Return ONLY valid JSON.
 
-        		{
-        		  "days": [
-        		    {
-        		      "day": "Monday",
-        		      "focus": "Chest & Triceps",
-        		      "exercises": [
-        		        {
-        		          "name": "Bench Press",
-        		          "sets": 4,
-        		          "reps": 10
-        		        }
-        		      ]
-        		    }
-        		  ]
-        		}
+                Format:
 
-        		Rules:
-        		1. Return only JSON.
-        		2. No markdown.
-        		3. No explanation.
-        		4. No ```json blocks.
-        		5. Generate all 7 days.
+                {
+                  "days": [
+                    {
+                      "day": "Monday",
+                      "focus": "Chest & Triceps",
+                      "exercises": [
+                        {
+                          "name": "Bench Press",
+                          "sets": 4,
+                          "reps": 10
+                        }
+                      ]
+                    }
+                  ]
+                }
 
-        		""",
-        		profile.getAge(),
-        		profile.getHeight(),
-        		profile.getWeight(),
-        		profile.getGender(),
-        		profile.getGoal()
-        		);
-        String workoutPlan =
-                geminiService.generateWorkout(prompt);
+                Rules:
+                1. Return only JSON.
+                2. No markdown.
+                3. No explanation.
+                4. No ```json blocks.
+                5. Generate all 7 days.
+                """,
+                profile.getAge(),
+                profile.getHeight(),
+                profile.getWeight(),
+                profile.getGender(),
+                profile.getGoal());
 
-        return new AIWorkoutResponse(workoutPlan);
+        // 3. Create request for AI Service
+        AIServiceRequest request =
+                new AIServiceRequest(
+                        userId,
+                        prompt,
+                        "WORKOUT");
+
+        // 4. Call separate AI microservice
+        return aiService.generateWorkout(request);
     }
 }

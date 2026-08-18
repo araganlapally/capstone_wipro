@@ -1,6 +1,9 @@
 package com.wipro.service;
 
+import com.wipro.dto.AIServiceRequest;
+import com.wipro.dto.AIWorkoutResponse;
+
 public interface AIService {
 
-    String generateWorkout(String prompt);
+    AIWorkoutResponse generateWorkout(AIServiceRequest request);
 }

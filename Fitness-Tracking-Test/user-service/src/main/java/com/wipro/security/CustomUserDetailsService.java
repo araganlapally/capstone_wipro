@@ -36,7 +36,7 @@ public class CustomUserDetailsService
         return User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
-                .roles(user.getRole().name())
+                .roles(user.getRole())
                 .build();
     }
 }

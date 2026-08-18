@@ -1,10 +1,13 @@
 package com.wipro.service;
 
+import com.wipro.dto.UserProfileRequest;
 import com.wipro.entity.FitnessProfile;
 import com.wipro.exception.UserNotFoundException;
 import com.wipro.repository.FitnessProfileRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,6 +33,7 @@ class UserServiceImplTest {
         Long userId = 1L;
 
         FitnessProfile profile = new FitnessProfile();
+
         profile.setAge(25);
         profile.setHeight(175.0);
         profile.setWeight(70.0);
@@ -39,7 +43,8 @@ class UserServiceImplTest {
         when(profileRepository.findByUserId(userId))
                 .thenReturn(Optional.of(profile));
 
-        FitnessProfile result = userService.getProfile(userId);
+        FitnessProfile result =
+                userService.getProfile(userId);
 
         assertNotNull(result);
         assertEquals(25, result.getAge());
@@ -63,10 +68,11 @@ class UserServiceImplTest {
         UserNotFoundException exception =
                 assertThrows(
                         UserNotFoundException.class,
-                        () -> userService.getProfile(userId)
-                );
+                        () -> userService.getProfile(userId));
 
-        assertEquals("Profile not found", exception.getMessage());
+        assertEquals(
+                "Profile not found",
+                exception.getMessage());
 
         verify(profileRepository, times(1))
                 .findByUserId(userId);
@@ -77,35 +83,59 @@ class UserServiceImplTest {
 
         Long userId = 1L;
 
-        FitnessProfile existingProfile = new FitnessProfile();
+        FitnessProfile existingProfile =
+                new FitnessProfile();
+
         existingProfile.setAge(20);
         existingProfile.setHeight(170.0);
         existingProfile.setWeight(60.0);
         existingProfile.setGoal("Gain Weight");
         existingProfile.setGender("Male");
 
-        FitnessProfile updatedProfile = new FitnessProfile();
-        updatedProfile.setAge(25);
-        updatedProfile.setHeight(175.0);
-        updatedProfile.setWeight(70.0);
-        updatedProfile.setGoal("Weight Loss");
-        updatedProfile.setGender("Female");
+        UserProfileRequest request =
+                new UserProfileRequest();
+
+        request.setAge(25);
+        request.setHeight(175.0);
+        request.setWeight(70.0);
+        request.setGoal("Weight Loss");
+        request.setGender("Female");
 
         when(profileRepository.findByUserId(userId))
                 .thenReturn(Optional.of(existingProfile));
 
-        when(profileRepository.save(any(FitnessProfile.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(profileRepository.save(
+                any(FitnessProfile.class)))
+                .thenAnswer(
+                        invocation ->
+                                invocation.getArgument(0));
 
         FitnessProfile result =
-                userService.updateProfile(userId, updatedProfile);
+                userService.updateProfile(
+                        userId,
+                        request);
 
         assertNotNull(result);
-        assertEquals(25, result.getAge());
-        assertEquals(175.0, result.getHeight());
-        assertEquals(70.0, result.getWeight());
-        assertEquals("Weight Loss", result.getGoal());
-        assertEquals("Female", result.getGender());
+
+        assertEquals(
+                25,
+                result.getAge());
+
+        assertEquals(
+                175.0,
+                result.getHeight());
+
+        assertEquals(
+                70.0,
+                result.getWeight());
+
+        assertEquals(
+                "Weight Loss",
+                result.getGoal());
+
+        assertEquals(
+                "Female",
+                result.getGender());
 
         verify(profileRepository, times(1))
                 .findByUserId(userId);
@@ -119,7 +149,14 @@ class UserServiceImplTest {
 
         Long userId = 1L;
 
-        FitnessProfile profile = new FitnessProfile();
+        UserProfileRequest request =
+                new UserProfileRequest();
+
+        request.setAge(25);
+        request.setHeight(175.0);
+        request.setWeight(70.0);
+        request.setGoal("Weight Loss");
+        request.setGender("Male");
 
         when(profileRepository.findByUserId(userId))
                 .thenReturn(Optional.empty());
@@ -127,10 +164,13 @@ class UserServiceImplTest {
         UserNotFoundException exception =
                 assertThrows(
                         UserNotFoundException.class,
-                        () -> userService.updateProfile(userId, profile)
-                );
+                        () -> userService.updateProfile(
+                                userId,
+                                request));
 
-        assertEquals("Profile not found", exception.getMessage());
+        assertEquals(
+                "Profile not found",
+                exception.getMessage());
 
         verify(profileRepository, times(1))
                 .findByUserId(userId);
