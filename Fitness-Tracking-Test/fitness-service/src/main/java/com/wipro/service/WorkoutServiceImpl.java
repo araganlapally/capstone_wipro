@@ -131,9 +131,26 @@ public class WorkoutServiceImpl implements WorkoutService {
     }
     @Override
     public AIWorkoutResponse generateWorkout(Long userId) {
+    	
+    	System.out.println("WORKOUT GENERATION STARTED FOR USER = " + userId);
+    	
+    	WorkoutPlan existingPlan =
+    	        workoutPlanRepository
+    	                .findTopByUserIdOrderByIdDesc(userId)
+    	                .orElse(null);
 
-        UserProfileResponse profile =
-                userServiceClient.getProfile(userId);
+    	UserProfileResponse profile =
+    	        userServiceClient.getProfile(userId);
+
+    	if (existingPlan != null
+    	        && existingPlan.getWorkoutJson() != null
+    	        && profile.getGoal().equals(existingPlan.getGoal())) {
+
+    	    System.out.println("SAVED WORKOUT PLAN FOUND FOR USER = " + userId);
+
+    	    return new AIWorkoutResponse(
+    	            existingPlan.getWorkoutJson());
+    	}
 
         String prompt = String.format("""
         		Generate a personalized 7-day workout plan.
@@ -170,8 +187,14 @@ public class WorkoutServiceImpl implements WorkoutService {
         		3. No explanation.
         		4. No ```json blocks.
         		5. Generate all 7 days.
+        		6. All values must be valid JSON.
+        		7. Any ranges such as 8-10 reps must be enclosed in quotes.
+        		8. All text values must be enclosed in double quotes.
+        		9. For rest days use:
+        		"exercises": []
+        		
 
-        		""",
+         		""",
         		profile.getAge(),
         		profile.getHeight(),
         		profile.getWeight(),
@@ -180,6 +203,19 @@ public class WorkoutServiceImpl implements WorkoutService {
         		);
         String workoutPlan =
                 geminiService.generateWorkout(prompt);
+        
+        WorkoutPlan plan =
+                workoutPlanRepository
+                        .findTopByUserIdOrderByIdDesc(userId)
+                        .orElse(new WorkoutPlan());
+
+        plan.setUserId(userId);
+        plan.setPlanName("AI Generated Workout Plan");
+        plan.setGoal(profile.getGoal());
+        plan.setDurationWeeks(1);
+        plan.setWorkoutJson(workoutPlan);
+
+        workoutPlanRepository.save(plan);
 
         return new AIWorkoutResponse(workoutPlan);
     }

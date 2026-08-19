@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wipro.dto.NutritionRecommendationResponse;
 import com.wipro.dto.UserProfileResponse;
 
+import com.wipro.repository.MealPlanRepository;
+
 
 
 class MealPlanServiceImplTest {
@@ -29,7 +31,7 @@ class MealPlanServiceImplTest {
 
 
     @Mock
-    private AIService aiService;
+    private GeminiService geminiService;
 
 
 
@@ -38,6 +40,10 @@ class MealPlanServiceImplTest {
 
 
     private ObjectMapper objectMapper;
+    
+    
+    @Mock
+    private MealPlanRepository mealPlanRepository;
 
 
 
@@ -58,8 +64,9 @@ class MealPlanServiceImplTest {
         mealPlanService =
                 new MealPlanServiceImpl(
                         userServiceClient,
-                        aiService,
-                        objectMapper
+                        geminiService,
+                        objectMapper,
+                        mealPlanRepository
                 );
     }
 
@@ -72,7 +79,6 @@ class MealPlanServiceImplTest {
     @Test
     void generateMealPlan_ShouldReturnNutritionResponse()
             throws Exception {
-
 
 
         UserProfileResponse profile =
@@ -110,7 +116,7 @@ class MealPlanServiceImplTest {
 
 
 
-        when(aiService
+        when(geminiService
                 .generateWorkout(
                         org.mockito.ArgumentMatchers.anyString()
                 ))

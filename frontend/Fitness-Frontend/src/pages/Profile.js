@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { User } from "lucide-react";
+import AppShell from "../components/app/AppShell";
+import GlassCard from "../components/landing/GlassCard";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfile = async () => {
@@ -15,8 +19,8 @@ export default function Profile() {
         `http://localhost:8081/api/users/${user.id}/profile`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
 
@@ -29,51 +33,41 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#050b12",
-          color: "white",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center"
-        }}
-      >
-        Loading Profile...
-      </div>
+      <AppShell>
+        <div className="min-h-[80vh] flex items-center justify-center text-white/60 text-sm">
+          Loading Profile...
+        </div>
+      </AppShell>
     );
   }
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#050b12",
-        color: "white",
-        padding: "40px"
-      }}
-    >
-      <h1 style={{ color: "#22e68a", marginBottom: "30px" }}>
-        👤 My Profile
-      </h1>
+  const FIELDS = [
+    { label: "Full Name", value: profile.user?.fullName },
+    { label: "Email", value: profile.user?.email },
+    { label: "Age", value: profile.age },
+    { label: "Gender", value: profile.gender },
+    { label: "Height", value: profile.height ? `${profile.height} cm` : undefined },
+    { label: "Weight", value: profile.weight ? `${profile.weight} kg` : undefined },
+    { label: "Goal", value: profile.goal },
+  ];
 
-      <div
-        style={{
-          maxWidth: "800px",
-          background: "#111827",
-          padding: "30px",
-          borderRadius: "20px",
-          border: "1px solid #1f2937"
-        }}
-      >
-        <p><b>Full Name:</b> {profile.user?.fullName}</p>
-        <p><b>Email:</b> {profile.user?.email}</p>
-        <p><b>Age:</b> {profile.age}</p>
-        <p><b>Gender:</b> {profile.gender}</p>
-        <p><b>Height:</b> {profile.height} cm</p>
-        <p><b>Weight:</b> {profile.weight} kg</p>
-        <p><b>Goal:</b> {profile.goal}</p>
+  return (
+    <AppShell>
+      <div className="px-5 sm:px-8 py-8 max-w-3xl mx-auto">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 mb-8">
+          <User size={22} className="text-[#4DFFB2]" aria-hidden="true" />
+          My Profile
+        </h1>
+
+        <GlassCard strong className="p-7 grid sm:grid-cols-2 gap-5" hover={false}>
+          {FIELDS.map((f) => (
+            <div key={f.label}>
+              <p className="text-xs text-white/45 mb-1">{f.label}</p>
+              <p className="text-base">{f.value ?? "—"}</p>
+            </div>
+          ))}
+        </GlassCard>
       </div>
-    </div>
+    </AppShell>
   );
 }

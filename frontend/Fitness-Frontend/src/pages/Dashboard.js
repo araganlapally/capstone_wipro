@@ -1,15 +1,58 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../App.css";
+import { Flame, Scale, Footprints, Gauge, PlayCircle, Dumbbell } from "lucide-react";
+import AppShell from "../components/app/AppShell";
+import GlassCard from "../components/landing/GlassCard";
+import GlassButton from "../components/landing/GlassButton";
+import WorkoutImageCarousel from "../components/app/WorkoutImageCarousel";
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+}
+
+const WEEKDAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+// Finds the entry in the AI-generated workout plan that corresponds to
+// today's actual weekday, so the Dashboard preview stays in sync with
+// the real plan shown on the Workouts page (same data source).
+function findTodaysWorkout(days) {
+  if (!days || days.length === 0) return null;
+
+  const todayName = WEEKDAYS[new Date().getDay()];
+
+  const byName = days.find(
+    (d) => d.day && d.day.toLowerCase().includes(todayName.toLowerCase())
+  );
+  if (byName) return byName;
+
+  if (days.length === 7) {
+    const mondayFirstIndex = (new Date().getDay() + 6) % 7;
+    return days[mondayFirstIndex];
+  }
+
+  return days[0];
+}
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [greeting, setGreeting] = useState(getGreeting());
 
-  const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState([
-    { type: "bot", text: "Hello! Ask me anything 💪" }
-  ]);
+  const [todaysWorkout, setTodaysWorkout] = useState(null);
+  const [workoutLoading, setWorkoutLoading] = useState(true);
+  const [workoutError, setWorkoutError] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     try {
@@ -22,427 +65,170 @@ export default function Dashboard() {
     }
   }, []);
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
+  // Keep the greeting accurate even if the dashboard is left open across
+  // a time-of-day boundary (e.g. noon -> afternoon) without a refresh.
+  useEffect(() => {
+    const interval = setInterval(() => setGreeting(getGreeting()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const sendMessage = async () => {
-    if (!question.trim()) return;
+  // Pull the same AI-generated workout plan used on the Workouts page,
+  // so "Today's Workout" here actually reflects today's real session
+  // instead of a static placeholder.
+  useEffect(() => {
+    const loadTodaysWorkout = async () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        if (!storedUser?.id) {
+          setWorkoutError(true);
+          return;
+        }
 
-    const userQuestion = question;
+        const response = await fetch(
+          `http://localhost:8082/api/workouts/generate/${storedUser.id}`
+        );
+        const data = await response.json();
+        const workoutJson = JSON.parse(data.workoutPlan);
+        const days = workoutJson.days || [];
 
-    setMessages(prev => [...prev, { type: "user", text: userQuestion }]);
-    setQuestion("");
+        setTodaysWorkout(findTodaysWorkout(days));
+      } catch (err) {
+        console.error("DASHBOARD WORKOUT ERROR =", err);
+        setWorkoutError(true);
+      } finally {
+        setWorkoutLoading(false);
+      }
+    };
 
-    try {
-      const res = await fetch("http://localhost:8082/ai/ask", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-        userId: JSON.parse(localStorage.getItem("user")).id,
-        question: userQuestion
-})
-      });
+    loadTodaysWorkout();
+  }, []);
 
-      const data = await res.json();
-
-      setMessages(prev => [
-        ...prev,
-        { type: "bot", text: data.answer }
-      ]);
-    } catch (err) {
-      setMessages(prev => [
-        ...prev,
-        { type: "bot", text: "Error connecting to AI" }
-      ]);
-    }
-  };
-
-  const metricCard = {
-    background: "linear-gradient(145deg, #111827, #0b111c)",
-    border: "1px solid #1f2937",
-    borderRadius: "16px",
-    padding: "20px",
-    flex: 1,
-    color: "white",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.35)"
-  };
-
-  const panelCard = {
-    background: "linear-gradient(145deg, #111827, #0b111c)",
-    border: "1px solid #1f2937",
-    borderRadius: "18px",
-    padding: "22px",
-    color: "white",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.35)"
-  };
+  const METRICS = [
+    { icon: Flame, label: "Calories Burned", value: "568", unit: "kcal", trend: "↑ 12% vs yesterday" },
+    { icon: Scale, label: "Weight Progress", value: "72.4", unit: "kg", trend: "↓ 1.3 kg vs last week" },
+    { icon: Footprints, label: "Daily Steps", value: "8,432", unit: "", trend: "↑ 15% vs yesterday" },
+    { icon: Gauge, label: "AI Fitness Score", value: "86", unit: "/100", trend: "Excellent" },
+  ];
 
   return (
-    <div style={{
-      display: "flex",
-      minHeight: "100vh",
-      background: "#050b12",
-      color: "white",
-      fontFamily: "Inter, Arial, sans-serif"
-    }}>
-
-      {/* SIDEBAR */}
-      <div style={{
-        width: "250px",
-        background: "#070d16",
-        padding: "22px",
-        borderRight: "1px solid #1f2937"
-      }}>
-        <h2 style={{
-          color: "#22e68a",
-          letterSpacing: "2px",
-          marginBottom: "30px"
-        }}>
-          ⚡ FITAI
-        </h2>
-
-        <div
-  style={{
-    padding: "12px 14px",
-    marginBottom: "8px",
-    borderRadius: "10px",
-    background: "rgba(34,230,138,0.15)",
-    color: "#22e68a",
-    cursor: "pointer"
-  }}
->
-  🏠 Dashboard
-</div>
-
-<div
-  onClick={() => navigate("/goals")}
-  style={{
-    padding: "12px 14px",
-    marginBottom: "8px",
-    borderRadius: "10px",
-    color: "#cbd5e1",
-    cursor: "pointer"
-  }}
->
-  🎯 Goal Setting
-</div>
-
-<div
-  onClick={() => navigate("/workouts")}
-  style={{
-    padding: "12px 14px",
-    marginBottom: "8px",
-    borderRadius: "10px",
-    color: "#cbd5e1",
-    cursor: "pointer"
-  }}
->
-  💪 Workouts
-</div>
-
-<div
-  onClick={() => navigate("/nutrition")}
-  style={{
-    padding: "12px 14px",
-    marginBottom: "8px",
-    borderRadius: "10px",
-    color: "#cbd5e1",
-    cursor: "pointer"
-  }}
->
-  🥗 Nutrition
-</div>
-
-<div
-  style={{
-    padding: "12px 14px",
-    marginBottom: "8px",
-    borderRadius: "10px",
-    color: "#cbd5e1",
-    cursor: "pointer"
-  }}
->
-  📈 Progress
-</div>
-
-<div
-  style={{
-    padding: "12px 14px",
-    marginBottom: "8px",
-    borderRadius: "10px",
-    color: "#cbd5e1",
-    cursor: "pointer"
-  }}
->
-  🤖 AI Coach
-</div>
-
-        <div
-  style={{
-    marginTop: "40px",
-    borderTop: "1px solid #1f2937",
-    paddingTop: "20px"
-  }}
->
-  <div
-    onClick={() => navigate("/profile")}
-    style={{
-      color: "#cbd5e1",
-      marginBottom: "12px",
-      cursor: "pointer"
-    }}
-  >
-    👤 Profile
-  </div>
-
-  <div
-    style={{
-      color: "#cbd5e1",
-      marginBottom: "12px",
-      cursor: "pointer"
-    }}
-  >
-    ⚙️ Settings
-  </div>
-
-  <div
-    onClick={logout}
-    style={{
-      color: "#ff6b6b",
-      cursor: "pointer"
-    }}
-  >
-    🚪 Log out
-  </div>
-</div>
-      </div>
-
-      {/* MAIN */}
-      <div style={{ flex: 1, padding: "24px 30px" }}>
-
+    <AppShell>
+      <div className="px-5 sm:px-8 py-8 max-w-7xl mx-auto">
         {/* HEADER */}
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "22px"
-        }}>
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 style={{ margin: 0 }}>
-              Good Evening, {user?.fullName || user?.name || user?.email || "User"} 👋
-            </h2>
-            <p style={{ color: "#94a3b8", marginTop: "6px" }}>
-              You’re crushing your goals. Keep it up!
+            <h1 className="text-2xl font-semibold">
+              {greeting}, {user?.fullName || user?.name || user?.email || "User"} 👋
+            </h1>
+            <p className="text-white/50 text-sm mt-1">
+              You're crushing your goals. Keep it up!
             </p>
           </div>
-
-          <button
-            onClick={logout}
-            style={{
-              background: "#22e68a",
-              border: "none",
-              color: "#020617",
-              padding: "12px 22px",
-              borderRadius: "12px",
-              fontWeight: "bold",
-              cursor: "pointer"
-            }}
-          >
-            Logout
-          </button>
         </div>
 
         {/* METRIC CARDS */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "18px",
-          marginBottom: "22px"
-        }}>
-          <div style={metricCard}>
-            <p style={{ color: "#94a3b8", margin: 0 }}>Calories Burned</p>
-            <h2 style={{ margin: "10px 0 4px" }}>568 <span style={{ fontSize: "14px" }}>kcal</span></h2>
-            <p style={{ color: "#22e68a", margin: 0 }}>↑ 12% vs yesterday</p>
-          </div>
-
-          <div style={metricCard}>
-            <p style={{ color: "#94a3b8", margin: 0 }}>Weight Progress</p>
-            <h2 style={{ margin: "10px 0 4px" }}>72.4 <span style={{ fontSize: "14px" }}>kg</span></h2>
-            <p style={{ color: "#22e68a", margin: 0 }}>↓ 1.3 kg vs last week</p>
-          </div>
-
-          <div style={metricCard}>
-            <p style={{ color: "#94a3b8", margin: 0 }}>Daily Steps</p>
-            <h2 style={{ margin: "10px 0 4px" }}>8,432</h2>
-            <p style={{ color: "#22e68a", margin: 0 }}>↑ 15% vs yesterday</p>
-          </div>
-
-          <div style={metricCard}>
-            <p style={{ color: "#94a3b8", margin: 0 }}>AI Fitness Score</p>
-            <h2 style={{ margin: "10px 0 4px" }}>86 <span style={{ fontSize: "14px" }}>/100</span></h2>
-            <p style={{ color: "#22e68a", margin: 0 }}>Excellent</p>
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {METRICS.map((m) => {
+            const Icon = m.icon;
+            return (
+              <GlassCard key={m.label} className="p-5" hover={false}>
+                <div className="flex items-center gap-2 text-white/45 text-xs mb-3">
+                  <Icon size={14} aria-hidden="true" />
+                  {m.label}
+                </div>
+                <p className="text-2xl font-semibold">
+                  {m.value}
+                  <span className="text-xs text-white/45 ml-1">{m.unit}</span>
+                </p>
+                <p className="text-xs text-[#4DFFB2] mt-2">{m.trend}</p>
+              </GlassCard>
+            );
+          })}
         </div>
 
         {/* MAIN CONTENT */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1.2fr 1.3fr 1fr",
-          gap: "18px"
-        }}>
-
-          {/* AI COACH */}
-          <div style={panelCard}>
-            <h3 style={{ marginTop: 0 }}>
-              AI Coach <span style={{
-                fontSize: "11px",
-                color: "#22e68a",
-                border: "1px solid #22e68a",
-                padding: "2px 6px",
-                borderRadius: "6px"
-              }}>BETA</span>
-            </h3>
-
-            <div style={{
-              height: "230px",
-              overflowY: "auto",
-              background: "#050b12",
-              borderRadius: "12px",
-              padding: "12px",
-              border: "1px solid #1f2937",
-              marginBottom: "12px"
-            }}>
-              {messages.map((msg, index) => (
-                <p
-                  key={index}
-                  style={{
-                    whiteSpace: "pre-line",
-                    background: msg.type === "user" ? "#22e68a" : "#111827",
-                    color: msg.type === "user" ? "#020617" : "white",
-                    padding: "10px",
-                    borderRadius: "10px",
-                    fontSize: "13px",
-                    textAlign: msg.type === "user" ? "right" : "left"
-                  }}
-                >
-                  {msg.text}
-                </p>
-              ))}
+        <div className="grid lg:grid-cols-3 gap-5 mb-5">
+          {/* TODAY'S WORKOUT — image carousel of today's real exercises */}
+          <GlassCard strong glow className="lg:col-span-2 p-6 flex flex-col" hover={false}>
+            <div className="flex items-center gap-2 mb-1">
+              <Dumbbell size={16} className="text-[#4DFFB2]" aria-hidden="true" />
+              <h3 className="font-semibold">Today's Workout</h3>
             </div>
 
-            <input
-              placeholder="Ask FitAI..."
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "11px",
-                borderRadius: "10px",
-                border: "1px solid #334155",
-                background: "#0b111c",
-                color: "white",
-                marginBottom: "10px"
-              }}
-            />
+            {workoutLoading ? (
+              <p className="text-white/45 text-sm flex-1 mt-3">
+                Loading today's plan...
+              </p>
+            ) : workoutError || !todaysWorkout ? (
+              <>
+                <p className="text-white/45 text-sm flex-1 mt-3">
+                  No workout plan yet — generate one to see today's session
+                  here.
+                </p>
+                <GlassButton
+                  variant="primary"
+                  className="w-full sm:w-auto mt-5"
+                  onClick={() => navigate("/workouts")}
+                >
+                  Create My Workout
+                </GlassButton>
+              </>
+            ) : (
+              <>
+                <p className="text-white/50 text-sm mb-4">
+                  {todaysWorkout.day}
+                  {todaysWorkout.focus ? ` — ${todaysWorkout.focus}` : ""}
+                </p>
 
-            <button
-              onClick={sendMessage}
-              style={{
-                width: "100%",
-                padding: "11px",
-                borderRadius: "10px",
-                border: "none",
-                background: "#22e68a",
-                color: "#020617",
-                fontWeight: "bold",
-                cursor: "pointer"
-              }}
-            >
-              Chat with Coach
-            </button>
-          </div>
+                {todaysWorkout.exercises?.length > 0 ? (
+                  <WorkoutImageCarousel exercises={todaysWorkout.exercises} />
+                ) : (
+                  <p className="text-white/45 text-sm flex-1">Rest Day 😴</p>
+                )}
 
-          {/* WORKOUT CARD */}
-          <div style={panelCard}>
-            <h3 style={{ marginTop: 0 }}>Today’s Workout</h3>
-            <p style={{ color: "#94a3b8" }}>Push Day – Chest & Triceps</p>
-
-            <ul style={{ lineHeight: "2", color: "#e5e7eb" }}>
-              <li>Bench Press — 4 × 10</li>
-              <li>Incline Dumbbell Press — 4 × 10</li>
-              <li>Cable Fly — 3 × 12</li>
-              <li>Tricep Pushdown — 3 × 12</li>
-            </ul>
-
-            <button style={{
-              width: "100%",
-              padding: "12px",
-              background: "#22e68a",
-              border: "none",
-              borderRadius: "10px",
-              color: "#020617",
-              fontWeight: "bold",
-              cursor: "pointer"
-            }}>
-              ▶ Start Workout
-            </button>
-          </div>
+                <GlassButton
+                  variant="primary"
+                  className="w-full sm:w-auto mt-5"
+                  onClick={() => navigate("/workouts")}
+                >
+                  <PlayCircle size={16} /> Start Workout
+                </GlassButton>
+              </>
+            )}
+          </GlassCard>
 
           {/* NUTRITION */}
-          <div style={panelCard}>
-            <h3 style={{ marginTop: 0 }}>Nutrition Today</h3>
-
-            <div style={{
-              width: "150px",
-              height: "150px",
-              borderRadius: "50%",
-              border: "18px solid #22e68a",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              margin: "20px auto",
-              fontSize: "22px",
-              fontWeight: "bold"
-            }}>
+          <GlassCard className="p-6" hover={false}>
+            <h3 className="font-semibold mb-4">Nutrition Today</h3>
+            <div className="w-36 h-36 rounded-full border-[14px] border-[#4DFFB2] flex items-center justify-center mx-auto mb-5 text-lg font-semibold">
               1,842
             </div>
-
-            <p>Protein <span style={{ float: "right" }}>128g / 150g</span></p>
-            <p>Carbs <span style={{ float: "right" }}>185g / 250g</span></p>
-            <p>Fat <span style={{ float: "right" }}>56g / 70g</span></p>
-          </div>
+            <div className="space-y-1.5 text-sm text-white/75">
+              <p className="flex justify-between">Protein <span>128g / 150g</span></p>
+              <p className="flex justify-between">Carbs <span>185g / 250g</span></p>
+              <p className="flex justify-between">Fat <span>56g / 70g</span></p>
+            </div>
+          </GlassCard>
         </div>
 
         {/* BOTTOM ROW */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: "18px",
-          marginTop: "18px"
-        }}>
-          <div style={panelCard}>
-            <h3>Weight Trend</h3>
-            <h2>72.4 kg</h2>
-            <p style={{ color: "#22e68a" }}>↓ 1.3 kg vs last week</p>
-          </div>
-
-          <div style={panelCard}>
-            <h3>Weekly Calories</h3>
-            <h2>Avg. 2,150 kcal</h2>
-            <p style={{ color: "#94a3b8" }}>Mon Tue Wed Thu Fri Sat Sun</p>
-          </div>
-
-          <div style={panelCard}>
-            <h3>Muscle Recovery</h3>
-            <h2>78%</h2>
-            <p style={{ color: "#22e68a" }}>Good Recovery</p>
-          </div>
+        <div className="grid sm:grid-cols-3 gap-5">
+          <GlassCard className="p-5" hover={false}>
+            <h4 className="text-sm text-white/60 mb-2">Weight Trend</h4>
+            <p className="text-xl font-semibold">72.4 kg</p>
+            <p className="text-xs text-[#4DFFB2] mt-1">↓ 1.3 kg vs last week</p>
+          </GlassCard>
+          <GlassCard className="p-5" hover={false}>
+            <h4 className="text-sm text-white/60 mb-2">Weekly Calories</h4>
+            <p className="text-xl font-semibold">Avg. 2,150 kcal</p>
+            <p className="text-xs text-white/40 mt-1">Mon Tue Wed Thu Fri Sat Sun</p>
+          </GlassCard>
+          <GlassCard className="p-5" hover={false}>
+            <h4 className="text-sm text-white/60 mb-2">Muscle Recovery</h4>
+            <p className="text-xl font-semibold">78%</p>
+            <p className="text-xs text-[#4DFFB2] mt-1">Good Recovery</p>
+          </GlassCard>
         </div>
-
       </div>
-    </div>
+    </AppShell>
   );
 }
