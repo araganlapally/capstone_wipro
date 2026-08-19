@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -9,17 +8,16 @@ import Goals from "./pages/Goals";
 import Profile from "./pages/Profile";
 import Workouts from "./pages/Workouts";
 import Nutrition from "./pages/Nutrition";
-import AICoach from "./pages/AICoach";
+
+<Route path="/profile" element={<Profile />} />
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* PUBLIC LANDING */}
-        <Route path="/" element={<LandingPage />} />
 
         {/* AUTH */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* APP */}
@@ -28,7 +26,6 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/workouts" element={<Workouts />} />
         <Route path="/nutrition" element={<Nutrition />} />
-        <Route path="/ai-coach" element={<AICoach />} />
       </Routes>
     </Router>
   );

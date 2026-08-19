@@ -1,6 +1,9 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Target } from "lucide-react";
+import AppShell from "../components/app/AppShell";
+import GlassCard from "../components/landing/GlassCard";
+import GlassButton from "../components/landing/GlassButton";
 
 export default function Goals() {
   const navigate = useNavigate();
@@ -10,7 +13,7 @@ export default function Goals() {
     height: "",
     weight: "",
     gender: "",
-    goal: ""
+    goal: "",
   });
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -18,6 +21,7 @@ export default function Goals() {
 
   useEffect(() => {
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProfile = async () => {
@@ -26,8 +30,8 @@ export default function Goals() {
         `http://localhost:8081/api/users/${user.id}/profile`,
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -39,7 +43,7 @@ export default function Goals() {
           height: data.height || "",
           weight: data.weight || "",
           gender: data.gender || "",
-          goal: data.goal || ""
+          goal: data.goal || "",
         });
       }
     } catch (error) {
@@ -55,9 +59,9 @@ export default function Goals() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(profile)
+          body: JSON.stringify(profile),
         }
       );
 
@@ -73,140 +77,83 @@ export default function Goals() {
     }
   };
 
+  const inputClass =
+    "w-full px-4 py-3 mt-1.5 rounded-xl bg-white/5 border border-white/10 text-white " +
+    "focus:outline-none focus:border-[#4DFFB2]/50 focus:ring-1 focus:ring-[#4DFFB2]/30 transition-colors";
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#050b12",
-        color: "white",
-        padding: "40px"
-      }}
-    >
-      <h1 style={{ color: "#22e68a" }}>
-        🎯 Goal Setting
-      </h1>
+    <AppShell>
+      <div className="px-5 sm:px-8 py-8 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-semibold flex items-center gap-2 mb-8">
+          <Target size={22} className="text-[#4DFFB2]" aria-hidden="true" />
+          Goal Setting
+        </h1>
 
-      <div
-        style={{
-          maxWidth: "500px",
-          background: "#111827",
-          padding: "30px",
-          borderRadius: "16px",
-          border: "1px solid #1f2937"
-        }}
-      >
-        <div style={{ marginBottom: "15px" }}>
-          <label>Age</label>
-          <input
-            type="number"
-            value={profile.age}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                age: e.target.value
-              })
-            }
-            style={inputStyle}
-          />
-        </div>
+        <GlassCard strong className="p-7" hover={false}>
+          <div className="mb-4">
+            <label className="text-sm text-white/60">Age</label>
+            <input
+              type="number"
+              value={profile.age}
+              onChange={(e) => setProfile({ ...profile, age: e.target.value })}
+              className={inputClass}
+            />
+          </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Height (cm)</label>
-          <input
-            type="number"
-            value={profile.height}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                height: e.target.value
-              })
-            }
-            style={inputStyle}
-          />
-        </div>
+          <div className="mb-4">
+            <label className="text-sm text-white/60">Height (cm)</label>
+            <input
+              type="number"
+              value={profile.height}
+              onChange={(e) => setProfile({ ...profile, height: e.target.value })}
+              className={inputClass}
+            />
+          </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Weight (kg)</label>
-          <input
-            type="number"
-            value={profile.weight}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                weight: e.target.value
-              })
-            }
-            style={inputStyle}
-          />
-        </div>
+          <div className="mb-4">
+            <label className="text-sm text-white/60">Weight (kg)</label>
+            <input
+              type="number"
+              value={profile.weight}
+              onChange={(e) => setProfile({ ...profile, weight: e.target.value })}
+              className={inputClass}
+            />
+          </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Gender</label>
-          <select
-            value={profile.gender}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                gender: e.target.value
-              })
-            }
-            style={inputStyle}
-          >
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
+          <div className="mb-4">
+            <label className="text-sm text-white/60">Gender</label>
+            <select
+              value={profile.gender}
+              onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
+              className={inputClass}
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
 
-        <div style={{ marginBottom: "20px" }}>
-          <label>Goal</label>
-          <select
-            value={profile.goal}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                goal: e.target.value
-              })
-            }
-            style={inputStyle}
-          >
-            <option value="">Select Goal</option>
-            <option value="Weight Loss">Weight Loss</option>
-            <option value="Weight Gain">Weight Gain</option>
-            <option value="Muscle Building">Muscle Building</option>
-            <option value="General Fitness">General Fitness</option>
-            <option value="Body Strengthening">
-              Body Strengthening
-            </option>
-          </select>
-        </div>
+          <div className="mb-6">
+            <label className="text-sm text-white/60">Goal</label>
+            <select
+              value={profile.goal}
+              onChange={(e) => setProfile({ ...profile, goal: e.target.value })}
+              className={inputClass}
+            >
+              <option value="">Select Goal</option>
+              <option value="Weight Loss">Weight Loss</option>
+              <option value="Weight Gain">Weight Gain</option>
+              <option value="Muscle Building">Muscle Building</option>
+              <option value="General Fitness">General Fitness</option>
+              <option value="Body Strengthening">Body Strengthening</option>
+            </select>
+          </div>
 
-        <button
-          onClick={saveProfile}
-          style={{
-            background: "#22e68a",
-            color: "#000",
-            border: "none",
-            padding: "12px 20px",
-            borderRadius: "10px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            width: "100%"
-          }}
-        >
-          Save Goals
-        </button>
+          <GlassButton variant="primary" className="w-full" onClick={saveProfile}>
+            Save Goals
+          </GlassButton>
+        </GlassCard>
       </div>
-    </div>
+    </AppShell>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  marginTop: "6px",
-  borderRadius: "10px",
-  border: "1px solid #334155",
-  background: "#0b111c",
-  color: "white"
-};
