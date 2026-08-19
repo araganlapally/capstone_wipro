@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.wipro.dto.ProgressRequest;
@@ -17,8 +19,10 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ProgressServiceImpl
-        implements ProgressService {
+public class ProgressServiceImpl implements ProgressService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(ProgressServiceImpl.class);
 
     private final ProgressRepository progressRepository;
     private final ModelMapper modelMapper;
@@ -28,11 +32,18 @@ public class ProgressServiceImpl
     public ProgressResponse saveProgress(
             ProgressRequest request) {
 
+        logger.info("Saving progress for userId: {}",
+                request.getUserId());
+
         UserResponse user =
                 userServiceClient.getUserById(
                         request.getUserId());
 
         if (user == null) {
+
+            logger.error("User not found with userId: {}",
+                    request.getUserId());
+
             throw new ResourceNotFoundException(
                     "User not found");
         }
@@ -46,14 +57,22 @@ public class ProgressServiceImpl
                 progressRepository.save(
                         progress);
 
+        logger.info(
+                "Progress saved successfully with id: {}",
+                saved.getId());
+
         return modelMapper.map(
                 saved,
                 ProgressResponse.class);
     }
 
     @Override
-    public List<ProgressResponse>
-            getProgressByUserId(Long userId) {
+    public List<ProgressResponse> getProgressByUserId(
+            Long userId) {
+
+        logger.info(
+                "Fetching progress records for userId: {}",
+                userId);
 
         return progressRepository
                 .findByUserId(userId)
@@ -64,27 +83,42 @@ public class ProgressServiceImpl
                                 ProgressResponse.class))
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public ProgressResponse updateProgress(
             Long id,
             ProgressRequest request) {
 
+        logger.info(
+                "Updating progress record with id: {}",
+                id);
+
         Progress progress =
                 progressRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Progress not found with id : "
-                                        + id));
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Progress not found with id : "
+                                                + id));
 
-        progress.setUserId(request.getUserId());
-        progress.setWeight(request.getWeight());
-        progress.setBodyFat(request.getBodyFat());
+        progress.setUserId(
+                request.getUserId());
+
+        progress.setWeight(
+                request.getWeight());
+
+        progress.setBodyFat(
+                request.getBodyFat());
+
         progress.setRecordedDate(
                 request.getRecordedDate());
 
         Progress updatedProgress =
-                progressRepository.save(progress);
+                progressRepository.save(
+                        progress);
+
+        logger.info(
+                "Progress updated successfully with id: {}",
+                updatedProgress.getId());
 
         return modelMapper.map(
                 updatedProgress,
