@@ -24,7 +24,7 @@ public class WorkoutServiceImpl implements WorkoutService {
     private final WorkoutPlanRepository workoutPlanRepository;
     private final ModelMapper modelMapper;
     private final UserServiceClient userServiceClient;
-    private final GeminiService geminiService;
+    private final AIService geminiService;
 
     @Override
     public WorkoutPlanResponse createWorkoutPlan(

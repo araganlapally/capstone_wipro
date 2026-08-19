@@ -1,23 +1,28 @@
 package com.wipro.service;
 
-import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class GeminiServiceImpl implements GeminiService {
+public class AIServiceImpl implements AIService {
 
-    
+    private final RestTemplate restTemplate;
+
+    public AIServiceImpl(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     @Override
     public String generateWorkout(String prompt) {
 
-    	String url = "http://localhost:11434/api/generate";
-
-
-        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:11434/api/generate";
 
         Map<String, Object> requestBody = Map.of(
                 "model", "llama3",
@@ -36,8 +41,11 @@ public class GeminiServiceImpl implements GeminiService {
                         url,
                         HttpMethod.POST,
                         entity,
-                        Map.class);
+                        Map.class
+                );
 
-        return response.getBody().get("response").toString();
+        return response.getBody()
+                .get("response")
+                .toString();
     }
 }

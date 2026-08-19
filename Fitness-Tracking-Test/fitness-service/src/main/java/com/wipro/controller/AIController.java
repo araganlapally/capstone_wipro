@@ -1,14 +1,17 @@
 package com.wipro.controller;
 
 import java.util.Map;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import com.wipro.service.GeminiService;
-import lombok.RequiredArgsConstructor;
+
 import com.wipro.dto.AIChatRequest;
 import com.wipro.dto.UserProfileResponse;
+import com.wipro.service.AIService;
 import com.wipro.service.UserServiceClient;
+
+import lombok.RequiredArgsConstructor;
 
 
 
@@ -17,7 +20,7 @@ import com.wipro.service.UserServiceClient;
 public class AIController {
 
 	
-	private final GeminiService geminiService;
+	private final AIService aiService;
 	private final UserServiceClient userServiceClient;
 	
 	@PostMapping("/ai/ask")
@@ -51,7 +54,7 @@ public class AIController {
 			    request.getQuestion()
 			);
 
-			String answer = geminiService.generateWorkout(prompt);
+			String answer = aiService.generateWorkout(prompt);
 
 	    return Map.of("answer", answer);
 	}

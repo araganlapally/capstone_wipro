@@ -1,36 +1,28 @@
 package com.wipro.controller;
 
 import static org.mockito.Mockito.when;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 import java.util.List;
 
-import com.wipro.config.TestSecurityConfig;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
 import com.wipro.dto.FoodOption;
 import com.wipro.dto.NutritionRecommendationResponse;
 import com.wipro.security.JwtFilter;
 import com.wipro.service.MealPlanService;
 
-import org.junit.jupiter.api.Test;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
-
-import org.springframework.test.web.servlet.MockMvc;
-
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
-
-@WebMvcTest(MealPlanController.class)
-@Import(TestSecurityConfig.class)
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
 class MealPlanControllerTest {
 
 

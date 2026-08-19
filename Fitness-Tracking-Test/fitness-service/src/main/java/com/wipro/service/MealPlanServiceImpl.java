@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 public class MealPlanServiceImpl implements MealPlanService {
 
     private final UserServiceClient userServiceClient;
-    private final GeminiService geminiService;
+    private final AIService geminiService;
     private final ObjectMapper objectMapper;
     private final MealPlanRepository mealPlanRepository;
 

@@ -49,7 +49,7 @@ class WorkoutServiceImplTest {
 
 
     @Mock
-    private GeminiService geminiService;
+    private AIService aiService;
 
 
 
@@ -78,7 +78,7 @@ class WorkoutServiceImplTest {
                         workoutPlanRepository,
                         modelMapper,
                         userServiceClient,
-                        geminiService
+                        aiService
                 );
     }
 
@@ -312,7 +312,7 @@ class WorkoutServiceImplTest {
 
 
 
-        when(geminiService
+        when(aiService
                 .generateWorkout(
                         org.mockito.ArgumentMatchers.anyString()
                 ))
