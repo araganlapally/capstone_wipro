@@ -81,7 +81,6 @@ class MealPlanServiceImplTest {
             throws Exception {
 
 
-
         UserProfileResponse profile =
                 new UserProfileResponse();
 
